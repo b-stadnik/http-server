@@ -25,6 +25,7 @@ if(CPPCHECK)
       "--enable=warning,style,performance,portability"
       "--std=c++17"
       "--suppress=unusedFunction"
+      "--suppress=*:*external\*"
       "--template={file}:{line}:({severity}):{id}: {message}")
 else()
   message(WARNING "cppcheck not found, static analysis will be skipped.")
@@ -33,60 +34,56 @@ endif()
 # Enable clang-tidy
 find_program(CLANG_TIDY clang-tidy)
 if(CLANG_TIDY)
-  set(CLANG_TIDY_CHECKS *
-    # add checks to ignore here:
-    -modernize-use-trailing-return-type
-    -bugprone-assignment-in-if-condition
-    -bugprone-easily-swappable-parameters
-    -bugprone-implicit-widening-of-multiplication-result
-    -bugprone-macro-parentheses
-    -bugprone-narrowing-conversions
-    -bugprone-reserved-identifier
-    -bugprone-sizeof-expression
-    -cert-dcl37-c
-    -cert-dcl51-cpp
-    -cert-err33-c
-    -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
-    -concurrency-mt-unsafe
-    -cppcoreguidelines-avoid-magic-numbers
-    -cppcoreguidelines-avoid-non-const-global-variables
-    -cppcoreguidelines-init-variables
-    -cppcoreguidelines-narrowing-conversions
-    -google-readability-function-size
-    -google-readability-todo
-    -hicpp-function-size
-    -hicpp-no-assembler
-    -hicpp-signed-bitwise
-    -llvmlibc-restrict-system-libc-headers
-    -modernize-macro-to-enum
-    -readability-avoid-const-params-in-decls
-    -readability-duplicate-include
-    -readability-function-cognitive-complexity
-    -readability-function-size
-    -readability-identifier-length
-    -readability-isolate-declaration
-    -readability-magic-numbers
-    -readability-non-const-parameter
-  )
+  set(CLANG_TIDY_CHECKS
+      *
+      # add checks to ignore here:
+      -modernize-use-trailing-return-type
+      -bugprone-assignment-in-if-condition
+      -bugprone-easily-swappable-parameters
+      -bugprone-implicit-widening-of-multiplication-result
+      -bugprone-macro-parentheses
+      -bugprone-narrowing-conversions
+      -bugprone-reserved-identifier
+      -bugprone-sizeof-expression
+      -cert-dcl37-c
+      -cert-dcl51-cpp
+      -cert-err33-c
+      -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
+      -concurrency-mt-unsafe
+      -cppcoreguidelines-avoid-magic-numbers
+      -cppcoreguidelines-avoid-non-const-global-variables
+      -cppcoreguidelines-init-variables
+      -cppcoreguidelines-narrowing-conversions
+      -google-readability-function-size
+      -google-readability-todo
+      -hicpp-function-size
+      -hicpp-no-assembler
+      -hicpp-signed-bitwise
+      -llvmlibc-restrict-system-libc-headers
+      -modernize-macro-to-enum
+      -readability-avoid-const-params-in-decls
+      -readability-duplicate-include
+      -readability-function-cognitive-complexity
+      -readability-function-size
+      -readability-identifier-length
+      -readability-isolate-declaration
+      -readability-magic-numbers
+      -readability-non-const-parameter)
   string(REPLACE ";" "," CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS}")
-  set(CMAKE_CXX_CLANG_TIDY
-      "${CLANG_TIDY}" -checks=${CLANG_TIDY_CHECKS} -system-headers)
+  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}" -checks=${CLANG_TIDY_CHECKS}
+  -system-headers -header-filter=${CMAKE_SOURCE_DIR})
 else()
   message(WARNING "clang-tidy not found, static analysis will be skipped.")
 endif()
 
 find_package(Threads REQUIRED)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}/include
-)
+include_directories(${CMAKE_SOURCE_DIR}/include
+                    ${CMAKE_SOURCE_DIR}/include/utils)
 
-add_library(
-  components OBJECT
-  src/uart.cpp)
+add_subdirectory(external/SQLiteCPP SYSTEM)
+add_library(components OBJECT src/uart.cpp src/utils/msg_parser.cpp)
 
-add_executable(uart_handler src/main.cpp)
-target_link_libraries(uart_handler PUBLIC
-  components
-  Threads::Threads
-)
+add_executable(uart_handler src/main.cpp src/db_handler.cpp)
+target_link_libraries(uart_handler PUBLIC components Threads::Threads SQLiteCpp
+                                          sqlite3 pthread dl)

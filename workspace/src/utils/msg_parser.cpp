@@ -1,21 +1,12 @@
-#ifndef MSG_PARSER_H
-#define MSG_PARSER_H
+#include "msg_parser.h"
 
 #include <iostream>
 #include <sstream>
-#include <string>
 
 namespace message_parser
 {
 
-enum class MsgCategory
-{
-    SensorData,
-    Response,
-    Unknown
-};
-
-MsgCategory parseMessage(const std::string& msg)
+MsgCategory parseMessage(std::string& msg)
 {
     // Check if the message starts with '$' and ends with '\n'
     if(msg.empty() || msg[0] != '$' || msg.back() != 'n')
@@ -23,7 +14,8 @@ MsgCategory parseMessage(const std::string& msg)
         return MsgCategory::Unknown;
     }
 
-    std::istringstream iss(msg.substr(1, msg.size() - 2)); // Remove '$' and '\n'
+    msg = msg.substr(1, msg.size() - 2); // Remove '$' and '\n'
+    std::istringstream iss(msg);
     std::string token;
     std::getline(iss, token, ',');
 
@@ -60,6 +52,17 @@ MsgCategory parseMessage(const std::string& msg)
     return MsgCategory::Unknown;
 }
 
-} // namespace message_parser
+std::vector<std::string> splitString(const std::string& str)
+{
+    std::vector<std::string> tokens;
+    std::istringstream iss(str);
+    std::string token;
+    while(std::getline(iss, token, ','))
+    {
+        tokens.push_back(token);
+    }
 
-#endif // MSG_PARSER_H
+    return tokens;
+}
+
+} // namespace message_parser

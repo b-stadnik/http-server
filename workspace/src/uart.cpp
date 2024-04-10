@@ -7,10 +7,12 @@
 #include <thread>
 #include <unistd.h>
 
-SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size)
-    : devicePath_(device_path), baudRate_(baud_rate), bufferSize_(buffer_size)
+SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size,
+                       std::shared_ptr<DataBase> data_base)
+    : devicePath_(device_path), baudRate_(baud_rate), bufferSize_(buffer_size), dataBase(std::move(data_base))
 {
     dataBuffer.reserve(buffer_size);
+    // dataBase->updateConfig(12, true);
 }
 
 bool SerialPort::configureUart()
@@ -28,10 +30,10 @@ bool SerialPort::configureUart()
     return true;
 }
 
-void SerialPort::handleMessage(const std::string& msg)
+void SerialPort::handleMessage(std::string& msg)
 {
     message_parser::MsgCategory msg_category = message_parser::parseMessage(msg);
-    // std::cout << "Received from UART: " << received_data << " " << int(msg_category) << std::endl;
+    // std::cout << "Received from UART: " << msg << " " << int(msg_category) << std::endl;
     if(msg_category == message_parser::MsgCategory::SensorData)
     {
         dataBuffer.push_back(msg);
@@ -50,6 +52,7 @@ void SerialPort::handleMessage(const std::string& msg)
 
 void SerialPort::flushToDatabase()
 {
+    dataBase->storeMultipleMessages(dataBuffer);
     dataBuffer.clear();
 }
 
@@ -72,9 +75,7 @@ void SerialPort::run()
 
     while(true)
     {
-        std::getline(uart_device, received_data);
-
-        if(!received_data.empty())
+        while(std::getline(uart_device, received_data))
         {
             handleMessage(received_data);
         }
