@@ -8,8 +8,9 @@
 #include <unistd.h>
 
 SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size,
-                       std::shared_ptr<DataBase> data_base)
-    : devicePath_(device_path), baudRate_(baud_rate), bufferSize_(buffer_size), dataBase(std::move(data_base))
+                       std::shared_ptr<DataBase> data_base, std::shared_ptr<InterProcessComm> ip_comm)
+    : devicePath_(device_path), baudRate_(baud_rate), bufferSize_(buffer_size), dataBase(std::move(data_base)),
+      ipComm(std::move(ip_comm))
 {
     dataBuffer.reserve(buffer_size);
     // dataBase->updateConfig(12, true);
@@ -56,11 +57,15 @@ void SerialPort::flushToDatabase()
     dataBuffer.clear();
 }
 
-void SerialPort::sendToProcess(const std::string& data) {}
+void SerialPort::sendToProcess(const std::string& data)
+{
+    ipComm->sendData(data);
+}
 
 void SerialPort::run()
 {
     std::string received_data;
+    std::string ipc_data;
     std::fstream uart_device;
 
     uart_device.open(devicePath_, std::ios::in | std::ios::out);
@@ -79,6 +84,8 @@ void SerialPort::run()
         {
             handleMessage(received_data);
         }
+
+        ipComm->getData(ipc_data);
 
         // // Send data via UART
         // std::string data_to_send;

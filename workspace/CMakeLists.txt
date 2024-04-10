@@ -45,20 +45,14 @@ if(CLANG_TIDY)
       -bugprone-narrowing-conversions
       -bugprone-reserved-identifier
       -bugprone-sizeof-expression
+      -hicpp-signed-bitwise
       -cert-dcl37-c
       -cert-dcl51-cpp
       -cert-err33-c
       -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling
       -concurrency-mt-unsafe
-      -cppcoreguidelines-avoid-magic-numbers
-      -cppcoreguidelines-avoid-non-const-global-variables
+      -google-runtime-references
       -cppcoreguidelines-init-variables
-      -cppcoreguidelines-narrowing-conversions
-      -google-readability-function-size
-      -google-readability-todo
-      -hicpp-function-size
-      -hicpp-no-assembler
-      -hicpp-signed-bitwise
       -llvmlibc-restrict-system-libc-headers
       -modernize-macro-to-enum
       -readability-avoid-const-params-in-decls
@@ -67,8 +61,8 @@ if(CLANG_TIDY)
       -readability-function-size
       -readability-identifier-length
       -readability-isolate-declaration
-      -readability-magic-numbers
-      -readability-non-const-parameter)
+      -readability-non-const-parameter
+      -fuchsia-default-arguments-calls)
   string(REPLACE ";" "," CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS}")
   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}" -checks=${CLANG_TIDY_CHECKS}
   -system-headers -header-filter=${CMAKE_SOURCE_DIR})
@@ -82,7 +76,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include
                     ${CMAKE_SOURCE_DIR}/include/utils)
 
 add_subdirectory(external/SQLiteCPP SYSTEM)
-add_library(components OBJECT src/uart.cpp src/utils/msg_parser.cpp)
+add_library(components OBJECT src/uart.cpp src/utils/msg_parser.cpp src/pipes_handler.cpp)
 
 add_executable(uart_handler src/main.cpp src/db_handler.cpp)
 target_link_libraries(uart_handler PUBLIC components Threads::Threads SQLiteCpp

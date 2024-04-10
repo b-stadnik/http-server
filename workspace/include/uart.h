@@ -10,7 +10,8 @@
 class SerialPort
 {
   public:
-    SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size, std::shared_ptr<DataBase> data_base);
+    SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size, std::shared_ptr<DataBase> data_base,
+               std::shared_ptr<InterProcessComm> ip_comm);
     // void start();
     // void stop();
     void run();
@@ -28,6 +29,7 @@ class SerialPort
 
     std::vector<std::string> dataBuffer;
     std::shared_ptr<DataBase> dataBase;
+    std::shared_ptr<InterProcessComm> ipComm;
 };
 
 #endif // UART_H

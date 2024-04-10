@@ -15,30 +15,32 @@ MsgCategory parseMessage(std::string& msg)
     }
 
     msg = msg.substr(1, msg.size() - 2); // Remove '$' and '\n'
-    std::istringstream iss(msg);
-    std::string token;
-    std::getline(iss, token, ',');
+    const auto tokens = splitString(msg);
 
-    // Assuming first token is float for SensorData, or int for Response
-    if(token.find('.') != std::string::npos)
+    if(tokens.size() == 3 && tokens.front().find('.') != std::string::npos)
     {
-        try
+        for(const auto& token : tokens)
         {
-            float value = std::stof(token);
-            if(value >= 0.0 && value <= 1000.0)
+            try
             {
-                return MsgCategory::SensorData;
+                float value = std::stof(token);
+                if(value <= 0.0 || value >= 1000.0)
+                {
+                    throw;
+                }
+            }
+            catch(...)
+            {
+                return MsgCategory::Unknown;
             }
         }
-        catch(...)
-        {
-        }
+        return MsgCategory::SensorData;
     }
     else
     {
         try
         {
-            int value = std::stoi(token);
+            int value = std::stoi(tokens.front());
             if(value >= 0)
             {
                 return MsgCategory::Response;

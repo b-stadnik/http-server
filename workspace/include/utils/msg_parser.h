@@ -1,5 +1,5 @@
-#ifndef MSG_PARSER_H
-#define MSG_PARSER_H
+#ifndef UTILS_MSG_PARSER_H
+#define UTILS_MSG_PARSER_H
 
 #include <string>
 #include <vector>
@@ -19,4 +19,4 @@ std::vector<std::string> splitString(const std::string& str);
 
 } // namespace message_parser
 
-#endif // MSG_PARSER_H
+#endif // UTILS_MSG_PARSER_H

@@ -1,5 +1,5 @@
-#ifndef INTERFACES_H
-#define INTERFACES_H
+#ifndef UTILS_INTERFACES_H
+#define UTILS_INTERFACES_H
 
 #include <string>
 #include <vector>
@@ -10,6 +10,15 @@ class DataBase
     virtual void storeMessage(const std::string& message) = 0;
     virtual void updateConfig(int frequency, bool debug) = 0;
     virtual void storeMultipleMessages(const std::vector<std::string>& messages) = 0;
+    virtual ~DataBase() = default;
 };
 
-#endif // INTERFACES_H
+class InterProcessComm
+{
+  public:
+    virtual void sendData(const std::string& data) = 0;
+    virtual void getData(std::string& data) = 0;
+    virtual ~InterProcessComm() = default;
+};
+
+#endif // UTILS_INTERFACES_H

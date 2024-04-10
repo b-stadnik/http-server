@@ -7,10 +7,8 @@ SqLiteHandler::SqLiteHandler(const std::string& dbFilename)
     : mDb(dbFilename, SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE), messageQuery(mDb, ""), configurationQuery(mDb, "")
 {
     createTables();
-    messageQuery =
-        std::move(SQLite::Statement(mDb, "INSERT INTO messages (pressure, temperature, velocity) VALUES (?, ?, ?);"));
-    configurationQuery =
-        std::move(SQLite::Statement(mDb, "INSERT INTO configurations (frequency, debug) VALUES (?, ?);"));
+    messageQuery = SQLite::Statement(mDb, "INSERT INTO messages (pressure, temperature, velocity) VALUES (?, ?, ?);");
+    configurationQuery = SQLite::Statement(mDb, "INSERT INTO configurations (frequency, debug) VALUES (?, ?);");
 }
 
 void SqLiteHandler::storeMultipleMessages(const std::vector<std::string>& messages)
@@ -45,7 +43,7 @@ void SqLiteHandler::storeMessage(const std::string& message)
 void SqLiteHandler::updateConfig(int frequency, bool debug)
 {
     configurationQuery.bind(1, frequency);
-    configurationQuery.bind(2, debug);
+    configurationQuery.bind(2, static_cast<int>(debug));
     configurationQuery.exec();
     configurationQuery.reset();
 }
