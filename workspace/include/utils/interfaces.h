@@ -18,6 +18,7 @@ class InterProcessComm
   public:
     virtual void sendData(const std::string& data) = 0;
     virtual void getData(std::string& data) = 0;
+    virtual bool connectionOpen() = 0;
     virtual ~InterProcessComm() = default;
 };
 

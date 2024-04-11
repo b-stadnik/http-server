@@ -2,6 +2,7 @@
 #define UART_H
 
 #include "interfaces.h"
+#include <boost/asio.hpp>
 #include <fstream>
 #include <memory>
 #include <string>
@@ -17,10 +18,11 @@ class SerialPort
     void run();
 
   private:
-    bool configureUart();
+    bool configureUart(boost::asio::serial_port& uart_device);
     void flushToDatabase();
     void handleMessage(std::string& msg);
     void sendToProcess(const std::string& data);
+    void getFromProcess(std::string& data);
 
     std::string devicePath_;
     int baudRate_;

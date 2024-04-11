@@ -3,9 +3,7 @@
 
 #include <chrono>
 #include <iostream>
-#include <termios.h>
 #include <thread>
-#include <unistd.h>
 
 SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size,
                        std::shared_ptr<DataBase> data_base, std::shared_ptr<InterProcessComm> ip_comm)
@@ -13,20 +11,14 @@ SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buf
       ipComm(std::move(ip_comm))
 {
     dataBuffer.reserve(buffer_size);
-    // dataBase->updateConfig(12, true);
 }
 
-bool SerialPort::configureUart()
+bool SerialPort::configureUart(boost::asio::serial_port& uart_device)
 {
-    const std::string command = "stty -F " + devicePath_ + " " + std::to_string(baudRate_) + " cs8 -cstopb -parenb";
-
-    int status = system(command.c_str());
-
-    if(status != 0)
-    {
-        std::cerr << "Error configuring UART settings using stty" << std::endl;
-        return false;
-    }
+    uart_device.set_option(boost::asio::serial_port_base::baud_rate(115200));
+    uart_device.set_option(boost::asio::serial_port_base::character_size(8 /* data bits */));
+    uart_device.set_option(boost::asio::serial_port_base::parity(boost::asio::serial_port_base::parity::none));
+    uart_device.set_option(boost::asio::serial_port_base::stop_bits(boost::asio::serial_port_base::stop_bits::one));
 
     return true;
 }
@@ -60,15 +52,20 @@ void SerialPort::flushToDatabase()
 void SerialPort::sendToProcess(const std::string& data)
 {
     ipComm->sendData(data);
+    // std::cout << data << std::endl;
+}
+
+void SerialPort::getFromProcess(std::string& data)
+{
+    ipComm->getData(data);
+    // std::cout << ipc_data << std::endl;
 }
 
 void SerialPort::run()
 {
-    std::string received_data;
     std::string ipc_data;
-    std::fstream uart_device;
-
-    uart_device.open(devicePath_, std::ios::in | std::ios::out);
+    boost::asio::io_service io;
+    boost::asio::serial_port uart_device(io, devicePath_);
 
     if(!uart_device.is_open())
     {
@@ -76,30 +73,39 @@ void SerialPort::run()
         return;
     }
 
-    configureUart();
+    configureUart(uart_device);
+
+    std::thread uart_reader_thread([&]() {
+        std::array<char, 256> data;
+
+        while(true)
+        {
+            size_t n_read = uart_device.read_some(boost::asio::buffer(data, data.size()));
+            std::string received_data(data.data(), n_read);
+
+            handleMessage(received_data);
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        }
+    });
+
+    std::thread ip_comm_thread([&]() {
+        while(ipComm->connectionOpen())
+        {
+            getFromProcess(ipc_data);
+
+            boost::asio::write(uart_device, boost::asio::buffer(ipc_data.c_str(), ipc_data.size()));
+        }
+        std::cout << "IPC connection closed" << std::endl;
+    });
 
     while(true)
     {
-        while(std::getline(uart_device, received_data))
-        {
-            handleMessage(received_data);
-        }
-
-        ipComm->getData(ipc_data);
-
-        // // Send data via UART
-        // std::string data_to_send;
-        // std::cout << "Enter data to send (or type 'exit' to quit): ";
-        // std::getline(std::cin, data_to_send);
-
-        // if (data_to_send == "exit") {
-        //     break; // Exit the loop if 'exit' is entered
-        // }
-
-        // uart_device << data_to_send << std::endl;
-
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
+    uart_reader_thread.join();
+    ip_comm_thread.join();
 
     uart_device.close();
 }

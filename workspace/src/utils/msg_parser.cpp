@@ -6,27 +6,31 @@
 namespace message_parser
 {
 
+constexpr auto SENSOR_DATA_SIZE = 3;
+constexpr auto SENSOR_DATA_MIN = 0.0;
+constexpr auto SENSOR_DATA_MAX = 1000.0;
+
 MsgCategory parseMessage(std::string& msg)
 {
     // Check if the message starts with '$' and ends with '\n'
-    if(msg.empty() || msg[0] != '$' || msg.back() != 'n')
+    if(msg.empty() || msg[0] != '$' || msg.back() != '\n')
     {
         return MsgCategory::Unknown;
     }
 
-    msg = msg.substr(1, msg.size() - 2); // Remove '$' and '\n'
+    msg = msg.substr(1, msg.size() - 1); // Remove '$' and '\n'
     const auto tokens = splitString(msg);
 
-    if(tokens.size() == 3 && tokens.front().find('.') != std::string::npos)
+    if(tokens.size() == SENSOR_DATA_SIZE && tokens.front().find('.') != std::string::npos)
     {
         for(const auto& token : tokens)
         {
             try
             {
-                float value = std::stof(token);
-                if(value <= 0.0 || value >= 1000.0)
+                double value = std::stod(token);
+                if(value <= SENSOR_DATA_MIN || value >= SENSOR_DATA_MAX)
                 {
-                    throw;
+                    throw std::invalid_argument("Invalid values");
                 }
             }
             catch(...)
@@ -36,19 +40,17 @@ MsgCategory parseMessage(std::string& msg)
         }
         return MsgCategory::SensorData;
     }
-    else
+
+    try
     {
-        try
+        int value = std::stoi(tokens.front());
+        if(value >= 0)
         {
-            int value = std::stoi(tokens.front());
-            if(value >= 0)
-            {
-                return MsgCategory::Response;
-            }
+            return MsgCategory::Response;
         }
-        catch(...)
-        {
-        }
+    }
+    catch(...)
+    {
     }
 
     return MsgCategory::Unknown;
@@ -59,6 +61,8 @@ std::vector<std::string> splitString(const std::string& str)
     std::vector<std::string> tokens;
     std::istringstream iss(str);
     std::string token;
+
+    tokens.reserve(SENSOR_DATA_SIZE);
     while(std::getline(iss, token, ','))
     {
         tokens.push_back(token);
