@@ -6,12 +6,12 @@ from enum import IntEnum, unique
 
 def wait_for_condition(condition_func, timeout=5):
     start_time = time.time()
-    while True:
-        if condition_func():
-            return True
-        if time.time() - start_time >= timeout:
-            return False
-        time.sleep(0.2)
+    condition_result = condition_func()
+    while not condition_result and time.time() - start_time < timeout:
+        time.sleep(0.1)
+        condition_result = condition_func()
+
+    return condition_result
 
 
 @unique

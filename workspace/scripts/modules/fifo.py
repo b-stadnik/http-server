@@ -5,17 +5,15 @@ import os
 
 class BiDirectionalFIFO:
     def __init__(self, read_path, write_path):
-        self._read_path = read_path
-        self._write_path = write_path
-
         # Create the FIFO files if they don't exist
-        if not os.path.exists(self._read_path):
-            os.mkfifo(self._read_path)
-        if not os.path.exists(self._write_path):
-            os.mkfifo(self._write_path)
+        if not os.path.exists(read_path):
+            os.mkfifo(read_path)
+        if not os.path.exists(write_path):
+            os.mkfifo(write_path)
 
-        self._read_fifo = open(self._read_path, "r")
-        self._write_fifo = open(self._write_path, "w")
+        self._write_fifo = open(write_path, "w")
+        self._read_fifo = open(read_path, "r")
+        print("FIFOS connected")
 
     def write(self, data):
         self._write_fifo.write(self.format_msg(data))

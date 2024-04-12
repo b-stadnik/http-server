@@ -48,14 +48,14 @@ void SqLiteHandler::updateConfig(const std::string& message)
     constexpr size_t msg_size(4);
     std::vector<std::string> tokens = message_parser::splitString(message, msg_size);
 
-    if(tokens.size() != msg_size || tokens.back() != "ok")
+    if(tokens.size() != msg_size || tokens.back().find("ok") == std::string::npos)
     {
         std::cerr << "Invalid message format: " << message << std::endl;
         return;
     }
 
-    configurationQuery.bind(1, tokens[0]);
-    configurationQuery.bind(2, tokens[1]);
+    configurationQuery.bind(1, tokens[1]);
+    configurationQuery.bind(2, tokens[2]);
     configurationQuery.exec();
     configurationQuery.reset();
 }

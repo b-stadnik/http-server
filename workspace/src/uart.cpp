@@ -41,11 +41,15 @@ void SerialPort::handleMessage(std::string& msg)
     }
     else if(msg_category == message_parser::MsgCategory::Response)
     {
-        sendToProcess(msg);
         if(msg.front() == CONFIG_MSG_ID)
         {
             dataBase->updateConfig(msg);
+            std::cout << "sent to database" << std::endl;
+
         }
+        msg = "$" + msg + "\n";
+        std::cout << "sent to process " << msg << std::endl;
+        sendToProcess(msg);
     }
 }
 

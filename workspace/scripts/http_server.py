@@ -51,17 +51,15 @@ class Backend(FastAPI):
     async def _start(self):
         self._bi_fifo.write(MessageId.START)
 
-        success = wait_for_condition(
-            lambda: self._bi_fifo.read() == self._bi_fifo.format_msg(f"{MessageId.START},ok")
-        )
+        success = wait_for_condition(lambda: "ok" in self._bi_fifo.read().strip())
+
         return {"success": success}
 
     async def _stop(self):
         self._bi_fifo.write(MessageId.STOP)
 
-        success = wait_for_condition(
-            lambda: self._bi_fifo.read() == self._bi_fifo.format_msg(f"{MessageId.STOP},ok")
-        )
+        success = wait_for_condition(lambda: "ok" in self._bi_fifo.read().strip())
+
         return {"success": success}
 
     async def _get_messages(self, limit: int = 10):
@@ -103,9 +101,8 @@ class Backend(FastAPI):
 
         self._bi_fifo.write(msg)
 
-        success = wait_for_condition(
-            lambda: self._bi_fifo.read() == self._bi_fifo.format_msg(msg + ",ok")
-        )
+        success = wait_for_condition(lambda: "ok" in self._bi_fifo.read().strip())
+
         return {"success": success}
 
 

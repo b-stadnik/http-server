@@ -2,7 +2,7 @@
 #include "pipes_handler.h"
 #include "uart.h"
 
-constexpr auto UART_DEVICE = "/dev/pts/4";
+constexpr auto UART_DEVICE = "/tmp/serial_mock1";
 
 int main()
 {
