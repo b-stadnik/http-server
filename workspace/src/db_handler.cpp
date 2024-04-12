@@ -9,6 +9,8 @@ SqLiteHandler::SqLiteHandler(const std::string& dbFilename)
     createTables();
     messageQuery = SQLite::Statement(mDb, "INSERT INTO messages (pressure, temperature, velocity) VALUES (?, ?, ?);");
     configurationQuery = SQLite::Statement(mDb, "INSERT INTO configurations (frequency, debug) VALUES (?, ?);");
+
+    std::cout << "Connected to database" << std::endl;
 }
 
 void SqLiteHandler::storeMultipleMessages(const std::vector<std::string>& messages)
@@ -25,9 +27,10 @@ void SqLiteHandler::storeMultipleMessages(const std::vector<std::string>& messag
 
 void SqLiteHandler::storeMessage(const std::string& message)
 {
-    std::vector<std::string> tokens = message_parser::splitString(message);
+    constexpr size_t msg_size(3);
+    std::vector<std::string> tokens = message_parser::splitString(message, msg_size);
 
-    if(tokens.size() != 3)
+    if(tokens.size() != msg_size)
     {
         std::cerr << "Invalid message format: " << message << std::endl;
         return;
@@ -40,10 +43,19 @@ void SqLiteHandler::storeMessage(const std::string& message)
     messageQuery.reset();
 }
 
-void SqLiteHandler::updateConfig(int frequency, bool debug)
+void SqLiteHandler::updateConfig(const std::string& message)
 {
-    configurationQuery.bind(1, frequency);
-    configurationQuery.bind(2, static_cast<int>(debug));
+    constexpr size_t msg_size(4);
+    std::vector<std::string> tokens = message_parser::splitString(message, msg_size);
+
+    if(tokens.size() != msg_size || tokens.back() != "ok")
+    {
+        std::cerr << "Invalid message format: " << message << std::endl;
+        return;
+    }
+
+    configurationQuery.bind(1, tokens[0]);
+    configurationQuery.bind(2, tokens[1]);
     configurationQuery.exec();
     configurationQuery.reset();
 }

@@ -5,9 +5,11 @@
 #include <iostream>
 #include <thread>
 
+constexpr auto CONFIG_MSG_ID = '2';
+
 SerialPort::SerialPort(const std::string& device_path, int baud_rate, size_t buffer_size,
                        std::shared_ptr<DataBase> data_base, std::shared_ptr<InterProcessComm> ip_comm)
-    : devicePath_(device_path), baudRate_(baud_rate), bufferSize_(buffer_size), dataBase(std::move(data_base)),
+    : devicePath_(device_path), baudRate_(baud_rate), msgBufferSize_(buffer_size), dataBase(std::move(data_base)),
       ipComm(std::move(ip_comm))
 {
     dataBuffer.reserve(buffer_size);
@@ -32,7 +34,7 @@ void SerialPort::handleMessage(std::string& msg)
         dataBuffer.push_back(msg);
         std::cout << "size " << dataBuffer.size() << std::endl;
 
-        if(dataBuffer.size() >= bufferSize_)
+        if(dataBuffer.size() >= msgBufferSize_)
         {
             flushToDatabase();
         }
@@ -40,6 +42,10 @@ void SerialPort::handleMessage(std::string& msg)
     else if(msg_category == message_parser::MsgCategory::Response)
     {
         sendToProcess(msg);
+        if(msg.front() == CONFIG_MSG_ID)
+        {
+            dataBase->updateConfig(msg);
+        }
     }
 }
 
@@ -58,7 +64,7 @@ void SerialPort::sendToProcess(const std::string& data)
 void SerialPort::getFromProcess(std::string& data)
 {
     ipComm->getData(data);
-    // std::cout << ipc_data << std::endl;
+    // std::cout << data << std::endl;
 }
 
 void SerialPort::run()
@@ -73,6 +79,8 @@ void SerialPort::run()
         return;
     }
 
+    std::cout << "Connected to UART device" << std::endl;
+
     configureUart(uart_device);
 
     std::thread uart_reader_thread([&]() {
@@ -80,6 +88,7 @@ void SerialPort::run()
 
         while(true)
         {
+            // Reading data from uart
             size_t n_read = uart_device.read_some(boost::asio::buffer(data, data.size()));
             std::string received_data(data.data(), n_read);
 
@@ -93,7 +102,8 @@ void SerialPort::run()
         while(ipComm->connectionOpen())
         {
             getFromProcess(ipc_data);
-
+            sendToProcess(ipc_data);
+            // Writing data to uart
             boost::asio::write(uart_device, boost::asio::buffer(ipc_data.c_str(), ipc_data.size()));
         }
         std::cout << "IPC connection closed" << std::endl;

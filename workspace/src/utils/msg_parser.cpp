@@ -19,7 +19,7 @@ MsgCategory parseMessage(std::string& msg)
     }
 
     msg = msg.substr(1, msg.size() - 1); // Remove '$' and '\n'
-    const auto tokens = splitString(msg);
+    const auto tokens = splitString(msg, SENSOR_DATA_SIZE);
 
     if(tokens.size() == SENSOR_DATA_SIZE && tokens.front().find('.') != std::string::npos)
     {
@@ -56,13 +56,13 @@ MsgCategory parseMessage(std::string& msg)
     return MsgCategory::Unknown;
 }
 
-std::vector<std::string> splitString(const std::string& str)
+std::vector<std::string> splitString(const std::string& str, size_t assumed_size)
 {
     std::vector<std::string> tokens;
     std::istringstream iss(str);
     std::string token;
 
-    tokens.reserve(SENSOR_DATA_SIZE);
+    tokens.reserve(assumed_size);
     while(std::getline(iss, token, ','))
     {
         tokens.push_back(token);

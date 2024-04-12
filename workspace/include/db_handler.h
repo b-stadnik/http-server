@@ -10,7 +10,7 @@ class SqLiteHandler : public DataBase
   public:
     explicit SqLiteHandler(const std::string& dbFilename);
     void storeMessage(const std::string& message) override;
-    void updateConfig(int frequency, bool debug) override;
+    void updateConfig(const std::string& message) override;
     void storeMultipleMessages(const std::vector<std::string>& messages) override;
 
   private:

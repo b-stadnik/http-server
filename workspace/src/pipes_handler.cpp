@@ -10,6 +10,8 @@ PipesHandler::PipesHandler(const std::string& in_pipe_name, const std::string& o
     {
         throw std::runtime_error("Failed to open named pipe\n");
     }
+
+    std::cout << "Connected to pipes" << std::endl;
 }
 
 PipesHandler::~PipesHandler()
