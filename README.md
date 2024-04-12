@@ -75,7 +75,7 @@ While inside container, follow the same instruction as in previous [Project buil
 
 ## Running application
 
-Make sure to create an empty database, program will configure its tables later on if they do not exist:
+Program will create and configure database, you can also create your own database and provide path:
 
 ```bash
 touch database.db
@@ -87,3 +87,29 @@ To run application, simply run prepared bash command:
 ./run.sh
 ```
 Override default arguments as neceserry, like path to database etc.
+
+By default the device mock will be running and acting like an actual device.
+
+## Quering to server
+
+Right now there is no fronted provided, you can directly enter your webbrowser and test different http methods:
+
+```bash
+http://0.0.0.0:7100/messages?limit=5
+http://0.0.0.0:7100/start
+http://0.0.0.0:7100/stop
+
+```
+
+For PUT method, use CURL from command line:
+
+```bash
+curl -X PUT -H "Content-Type: application/json" -d '{"frequency": 1, "debug": 1}' http://localhost:7100/configure
+{"success":true}
+
+```
+
+## TODO
+1. Use yaml files for config storage
+2. Improve logging
+3. Improve pipe creation - currently user might need to call application twice if pipes dont exist before run
