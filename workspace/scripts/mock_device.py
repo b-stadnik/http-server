@@ -13,6 +13,7 @@ class SerialMock:
         self.virtual_serial_interface = virtual_serial_interface
         self.msg_frequency = msg_frequency
         self.debug_flag = True
+        self.running = True
 
     def generate_mock_data(self):
         pressure = round(random.uniform(0.0, 1000.0), 2)
@@ -40,8 +41,10 @@ class SerialMock:
                 debug_flag = bool(args[1])
                 response = f"${MessageId.CONFIG},{self.msg_frequency},{debug_flag},ok\n"
             if int(command) == MessageId.START:
+                self.running = True
                 response = f"${MessageId.START},ok\n"
             if int(command) == MessageId.STOP:
+                self.running = False
                 response = f"${MessageId.STOP},ok\n"
         else:
             response = "invalid format\n"
@@ -56,9 +59,10 @@ class SerialMock:
         time.sleep(3)
         # Main loop to generate and send mock data
         while True:
-            mock_data = self.generate_mock_data()
-            print("Sending mock data:", mock_data.strip())
-            self.send_message(mock_data)
+            if self.running:
+                mock_data = self.generate_mock_data()
+                print("Sending mock data:", mock_data.strip())
+                self.send_message(mock_data)
             input_data = self.read_input()
             if input_data:
                 print("Received input:", input_data)

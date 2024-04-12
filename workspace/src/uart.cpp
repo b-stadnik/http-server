@@ -32,7 +32,7 @@ void SerialPort::handleMessage(std::string& msg)
     if(msg_category == message_parser::MsgCategory::SensorData)
     {
         dataBuffer.push_back(msg);
-        std::cout << "Received UART msgs buffer size" << dataBuffer.size() << std::endl;
+        std::cout << "Received UART msgs buffer size " << dataBuffer.size() << std::endl;
 
         if(dataBuffer.size() >= msgBufferSize_)
         {
