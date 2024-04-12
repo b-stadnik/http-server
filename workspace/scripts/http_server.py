@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import uvicorn
+import argparse
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,10 +12,10 @@ from modules.db_handler import DataBase
 
 class Backend(FastAPI):
 
-    def __init__(self):
+    def __init__(self, db_path):
         super().__init__()
         self._bi_fifo = BiDirectionalFIFO("/tmp/pipe2", "/tmp/pipe")
-        self._db_handler = DataBase("../build/database.db")
+        self._db_handler = DataBase(db_path)
 
         self._init_urls()
         self._init_cors()
@@ -107,5 +108,11 @@ class Backend(FastAPI):
 
 
 if __name__ == '__main__':
-    app = Backend()
-    uvicorn.run(app, host="0.0.0.0", port=7100, log_level="info")
+    parser = argparse.ArgumentParser(description="Run the backend server")
+    parser.add_argument("--ip", default="0.0.0.0", help="IP address to bind to")
+    parser.add_argument("--port", type=int, default=7100, help="Port number to listen on")
+    parser.add_argument("--db-file", required=True, help="Path to the database file")
+    args = parser.parse_args()
+
+    app = Backend(args.db_file)
+    uvicorn.run(app, host=args.ip, port=args.port, log_level="info")

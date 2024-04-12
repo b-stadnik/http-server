@@ -64,8 +64,9 @@ if(CLANG_TIDY)
       -readability-non-const-parameter
       -fuchsia-default-arguments-calls)
   string(REPLACE ";" "," CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS}")
-  set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}" -checks=${CLANG_TIDY_CHECKS}
-  -system-headers -header-filter=${CMAKE_SOURCE_DIR})
+#   set(CMAKE_CXX_CLANG_TIDY "${CLANG_TIDY}" -checks=${CLANG_TIDY_CHECKS}
+#   -system-headers -header-filter=${CMAKE_SOURCE_DIR})
+# TODO: remove 3rd party folders from clang-tidy
 else()
   message(WARNING "clang-tidy not found, static analysis will be skipped.")
 endif()

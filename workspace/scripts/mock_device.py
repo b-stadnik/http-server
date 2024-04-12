@@ -3,6 +3,7 @@
 import time
 import random
 import subprocess
+import argparse
 import os
 
 from modules.utils import MessageId
@@ -49,8 +50,8 @@ class SerialMock:
 
     def main_loop(self):
         # Start socat to create the virtual serial interface
-        socat_process = subprocess.Popen(["socat", "-d", "-d", "pty,raw,echo=0,link=/tmp/serial_mock1",
-                                          f"pty,raw,echo=0,link={self.virtual_serial_interface}"], stdout=subprocess.PIPE)
+        socat_process = subprocess.Popen(["socat", "-d", "-d", f"pty,raw,echo=0,link={self.virtual_serial_interface}",
+                                          f"pty,raw,echo=0,link=/tmp/serial_mock2"], stdout=subprocess.PIPE)
 
         time.sleep(3)
         # Main loop to generate and send mock data
@@ -66,5 +67,9 @@ class SerialMock:
             time.sleep(1 / self.msg_frequency)
 
 if __name__ == "__main__":
-    serial_mock = SerialMock("/tmp/serial_mock2")
+    parser = argparse.ArgumentParser(description="Run the mocked uart device")
+    parser.add_argument("--device-port", default="/tmp/serial_mock1", help="Mocked device port")
+    args = parser.parse_args()
+
+    serial_mock = SerialMock(args.device_port)
     serial_mock.main_loop()
