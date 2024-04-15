@@ -45,7 +45,6 @@ void SerialPort::handleMessage(std::string& msg)
         {
             dataBase->updateConfig(msg);
             std::cout << "sent to database" << std::endl;
-
         }
         msg = "$" + msg + "\n";
         std::cout << "sent to process " << msg << std::endl;
@@ -87,39 +86,33 @@ void SerialPort::run()
 
     configureUart(uart_device);
 
-    std::thread uart_reader_thread([&]() {
+    // UART -> IPC
+    std::thread uart_to_ipc_thread([&]() {
         std::array<char, 256> data;
 
-        while(true)
+        while(ipComm->connectionOpen())
         {
             // Reading data from uart
             size_t n_read = uart_device.read_some(boost::asio::buffer(data, data.size()));
             std::string received_data(data.data(), n_read);
 
             handleMessage(received_data);
-
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
         }
     });
 
-    std::thread ip_comm_thread([&]() {
+    // IPC -> UART
+    std::thread ipc_to_uart_thread([&]() {
         while(ipComm->connectionOpen())
         {
             getFromProcess(ipc_data);
-            sendToProcess(ipc_data);
             // Writing data to uart
             boost::asio::write(uart_device, boost::asio::buffer(ipc_data.c_str(), ipc_data.size()));
         }
         std::cout << "IPC connection closed" << std::endl;
     });
 
-    while(true)
-    {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    }
-
-    uart_reader_thread.join();
-    ip_comm_thread.join();
+    uart_to_ipc_thread.join();
+    ipc_to_uart_thread.join();
 
     uart_device.close();
 }

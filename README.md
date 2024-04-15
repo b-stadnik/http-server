@@ -88,7 +88,7 @@ To run application, simply run prepared bash command:
 ```
 Override default arguments as neceserry, like path to database etc.
 
-By default the device mock will be running and acting like an actual device.
+Use ```--mock ``` option to use mock running device
 
 ## Quering to server
 
@@ -105,11 +105,8 @@ For PUT method, use CURL from command line:
 
 ```bash
 curl -X PUT -H "Content-Type: application/json" -d '{"frequency": 1, "debug": 1}' http://localhost:7100/configure
-{"success":true}
-
 ```
 
 ## TODO
 1. Use yaml files for config storage
 2. Improve logging
-3. Improve pipe creation - currently user might need to call application twice if pipes dont exist before run

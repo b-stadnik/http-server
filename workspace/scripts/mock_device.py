@@ -30,6 +30,10 @@ class SerialMock:
         with os.fdopen(os.open(self.virtual_serial_interface, os.O_NONBLOCK | os.O_RDONLY)) as serial_port:
             return serial_port.readline()
 
+    def send_config(self):
+        config = f"${MessageId.CONFIG},{self.msg_frequency},{self.debug_flag},ok\n"
+        self.send_message(config)
+
     def process_input(self, input_data: str):
         input_data = input_data.strip()  # Remove leading and trailing whitespaces
         response = "invalid format\n"
@@ -38,8 +42,8 @@ class SerialMock:
             command, *args = input_data.split(',')
             if int(command) == MessageId.CONFIG:
                 self.msg_frequency = int(args[0])
-                debug_flag = bool(args[1])
-                response = f"${MessageId.CONFIG},{self.msg_frequency},{debug_flag},ok\n"
+                self.debug_flag = bool(args[1])
+                response = f"${MessageId.CONFIG},{self.msg_frequency},{int(args[1])},ok\n"
             if int(command) == MessageId.START:
                 self.running = True
                 response = f"${MessageId.START},ok\n"
@@ -57,12 +61,18 @@ class SerialMock:
                                           f"pty,raw,echo=0,link=/tmp/serial_mock2"], stdout=subprocess.PIPE)
 
         time.sleep(3)
+
+        # Send starting config
+        self.send_config()
+
         # Main loop to generate and send mock data
         while True:
+
             if self.running:
                 mock_data = self.generate_mock_data()
                 print("Sending mock data:", mock_data.strip())
                 self.send_message(mock_data)
+
             input_data = self.read_input()
             if input_data:
                 print("Received input:", input_data)
